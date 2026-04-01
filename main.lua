@@ -445,9 +445,8 @@ screenGui.Parent = player.PlayerGui
 
 local C = {
     bg      = Color3.fromRGB(13,13,18),
-    sidebar = Color3.fromRGB(18,18,26),
     panel   = Color3.fromRGB(22,22,32),
-    item    = Color3.fromRGB(28,28,42),
+    item    = Color3.fromRGB(30,30,45),
     accent  = Color3.fromRGB(255,200,50),
     text    = Color3.fromRGB(210,210,220),
     sub     = Color3.fromRGB(130,130,150),
@@ -459,137 +458,130 @@ local C = {
 -- Main frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "Main"
-mainFrame.Size = UDim2.new(0,560,0,400)
-mainFrame.Position = UDim2.new(0.5,-280,0.5,-200)
+mainFrame.Size = UDim2.new(0.92, 0, 0, 420)
+mainFrame.Position = UDim2.new(0.04, 0, 0.06, 0)
 mainFrame.BackgroundColor3 = C.bg
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
-Instance.new("UICorner",mainFrame).CornerRadius = UDim.new(0,10)
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
 
 -- Title bar
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1,0,0,36)
-titleBar.BackgroundColor3 = C.sidebar
+titleBar.Size = UDim2.new(1, 0, 0, 38)
+titleBar.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 titleBar.BorderSizePixel = 0
 titleBar.Parent = mainFrame
-Instance.new("UICorner",titleBar).CornerRadius = UDim.new(0,10)
-local titleFix = Instance.new("Frame")
-titleFix.Size = UDim2.new(1,0,0.5,0)
-titleFix.Position = UDim2.new(0,0,0.5,0)
-titleFix.BackgroundColor3 = C.sidebar
-titleFix.BorderSizePixel = 0
-titleFix.Parent = titleBar
+Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 12)
+local tbFix = Instance.new("Frame")
+tbFix.Size = UDim2.new(1, 0, 0.5, 0)
+tbFix.Position = UDim2.new(0, 0, 0.5, 0)
+tbFix.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+tbFix.BorderSizePixel = 0
+tbFix.Parent = titleBar
 
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1,-20,1,0)
-titleLabel.Position = UDim2.new(0,14,0,0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "[FORGE] THE FORGE SCRIPT v2.0"
-titleLabel.TextColor3 = C.accent
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 14
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Parent = titleBar
+local titleLbl = Instance.new("TextLabel")
+titleLbl.Size = UDim2.new(1, -80, 1, 0)
+titleLbl.Position = UDim2.new(0, 12, 0, 0)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "THE FORGE SCRIPT v2.0"
+titleLbl.TextColor3 = C.accent
+titleLbl.Font = Enum.Font.GothamBold
+titleLbl.TextSize = 14
+titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+titleLbl.Parent = titleBar
 
--- Minimize / Close
 local minimized = false
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0,28,0,22)
-closeBtn.Position = UDim2.new(1,-32,0,7)
-closeBtn.BackgroundColor3 = C.danger
-closeBtn.Text = "X"
-closeBtn.TextColor3 = Color3.new(1,1,1)
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 12
-closeBtn.BorderSizePixel = 0
-closeBtn.Parent = titleBar
-Instance.new("UICorner",closeBtn).CornerRadius = UDim.new(0,4)
-closeBtn.MouseButton1Click:Connect(function() screenGui:Destroy() end)
-
 local minBtn = Instance.new("TextButton")
-minBtn.Size = UDim2.new(0,28,0,22)
-minBtn.Position = UDim2.new(1,-64,0,7)
+minBtn.Size = UDim2.new(0, 30, 0, 24)
+minBtn.Position = UDim2.new(1, -68, 0, 7)
 minBtn.BackgroundColor3 = C.off
 minBtn.Text = "-"
 minBtn.TextColor3 = Color3.new(1,1,1)
 minBtn.Font = Enum.Font.GothamBold
-minBtn.TextSize = 12
+minBtn.TextSize = 14
 minBtn.BorderSizePixel = 0
 minBtn.Parent = titleBar
-Instance.new("UICorner",minBtn).CornerRadius = UDim.new(0,4)
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 6)
 
--- Content area
-local content = Instance.new("Frame")
-content.Name = "Content"
-content.Size = UDim2.new(1,0,1,-36)
-content.Position = UDim2.new(0,0,0,36)
-content.BackgroundTransparency = 1
-content.Parent = mainFrame
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 24)
+closeBtn.Position = UDim2.new(1, -34, 0, 7)
+closeBtn.BackgroundColor3 = C.danger
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent = titleBar
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+closeBtn.MouseButton1Click:Connect(function() screenGui:Destroy() end)
 
-minBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    content.Visible = not minimized
-    mainFrame.Size = minimized and UDim2.new(0,560,0,36) or UDim2.new(0,560,0,400)
-end)
+-- Tab bar (horizontal, under title)
+local tabBar = Instance.new("Frame")
+tabBar.Name = "TabBar"
+tabBar.Size = UDim2.new(1, -8, 0, 36)
+tabBar.Position = UDim2.new(0, 4, 0, 42)
+tabBar.BackgroundTransparency = 1
+tabBar.Parent = mainFrame
 
--- Sidebar tabs
-local sidebar = Instance.new("Frame")
-sidebar.Size = UDim2.new(0,110,1,0)
-sidebar.BackgroundColor3 = C.sidebar
-sidebar.BorderSizePixel = 0
-sidebar.Parent = content
-Instance.new("UICorner",sidebar).CornerRadius = UDim.new(0,8)
-local sidebarFix = Instance.new("Frame")
-sidebarFix.Size = UDim2.new(0.5,0,1,0)
-sidebarFix.Position = UDim2.new(0.5,0,0,0)
-sidebarFix.BackgroundColor3 = C.sidebar
-sidebarFix.BorderSizePixel = 0
-sidebarFix.Parent = sidebar
+local tabBarLayout = Instance.new("UIListLayout")
+tabBarLayout.FillDirection = Enum.FillDirection.Horizontal
+tabBarLayout.Padding = UDim.new(0, 4)
+tabBarLayout.Parent = tabBar
 
-local tabList = Instance.new("UIListLayout")
-tabList.FillDirection = Enum.FillDirection.Vertical
-tabList.Padding = UDim.new(0,4)
-tabList.Parent = sidebar
-Instance.new("UIPadding",sidebar).PaddingTop = UDim.new(0,8)
+-- Page container
+local pageContainer = Instance.new("Frame")
+pageContainer.Name = "Pages"
+pageContainer.Size = UDim2.new(1, -8, 1, -88)
+pageContainer.Position = UDim2.new(0, 4, 0, 82)
+pageContainer.BackgroundTransparency = 1
+pageContainer.Parent = mainFrame
 
--- Right panel
-local rightPanel = Instance.new("Frame")
-rightPanel.Size = UDim2.new(1,-118,1,-8)
-rightPanel.Position = UDim2.new(0,118,0,4)
-rightPanel.BackgroundTransparency = 1
-rightPanel.Parent = content
+-- Minimize logic
+local function setMinimized(state)
+    minimized = state
+    tabBar.Visible = not state
+    pageContainer.Visible = not state
+    mainFrame.Size = state and UDim2.new(0.92, 0, 0, 42) or UDim2.new(0.92, 0, 0, 420)
+    minBtn.Text = state and "+" or "-"
+end
+minBtn.MouseButton1Click:Connect(function() setMinimized(not minimized) end)
 
--- Pages container
+-- Pages and tabs
 local pages = {}
 local activeTab = nil
 
 local function makePage(name)
     local page = Instance.new("ScrollingFrame")
-    page.Size = UDim2.new(1,0,1,0)
+    page.Name = name
+    page.Size = UDim2.new(1, 0, 1, 0)
     page.BackgroundTransparency = 1
     page.ScrollBarThickness = 3
     page.ScrollBarImageColor3 = C.accent
     page.BorderSizePixel = 0
     page.Visible = false
-    page.Parent = rightPanel
-    Instance.new("UIListLayout",page).Padding = UDim.new(0,6)
-    Instance.new("UIPadding",page).PaddingTop = UDim.new(0,4)
+    page.CanvasSize = UDim2.new(0, 0, 0, 0)
+    page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    page.Parent = pageContainer
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 6)
+    layout.Parent = page
+    Instance.new("UIPadding", page).PaddingTop = UDim.new(0, 4)
     pages[name] = page
     return page
 end
 
-local function makeTab(name, icon)
+local function makeTab(name, label)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,-12,0,36)
-    btn.Position = UDim2.new(0,6,0,0)
+    btn.Size = UDim2.new(0, 80, 1, 0)
     btn.BackgroundColor3 = C.item
-    btn.Text = icon .. " " .. name
+    btn.Text = label
     btn.TextColor3 = C.sub
     btn.Font = Enum.Font.GothamSemibold
     btn.TextSize = 12
     btn.BorderSizePixel = 0
-    btn.Parent = sidebar
-    Instance.new("UICorner",btn).CornerRadius = UDim.new(0,6)
+    btn.Parent = tabBar
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
     btn.MouseButton1Click:Connect(function()
         if activeTab then
@@ -598,26 +590,25 @@ local function makeTab(name, icon)
             if pages[activeTab.name] then pages[activeTab.name].Visible = false end
         end
         btn.BackgroundColor3 = C.accent
-        btn.TextColor3 = Color3.fromRGB(10,10,10)
+        btn.TextColor3 = Color3.fromRGB(10, 10, 10)
         if pages[name] then pages[name].Visible = true end
-        activeTab = {btn=btn, name=name}
+        activeTab = {btn = btn, name = name}
     end)
-
     return btn
 end
 
--- Helper: toggle button
-local function makeToggle(parent, label, desc, initialState, onToggle)
+-- Toggle helper
+local function makeToggle(parent, label, desc, onToggle)
     local row = Instance.new("Frame")
-    row.Size = UDim2.new(1,-8,0,52)
+    row.Size = UDim2.new(1, -4, 0, desc and 58 or 42)
     row.BackgroundColor3 = C.item
     row.BorderSizePixel = 0
     row.Parent = parent
-    Instance.new("UICorner",row).CornerRadius = UDim.new(0,8)
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
 
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1,-70,0,24)
-    lbl.Position = UDim2.new(0,12,0,6)
+    lbl.Size = UDim2.new(1, -70, 0, 22)
+    lbl.Position = UDim2.new(0, 10, 0, desc and 8 or 10)
     lbl.BackgroundTransparency = 1
     lbl.Text = label
     lbl.TextColor3 = C.text
@@ -628,8 +619,8 @@ local function makeToggle(parent, label, desc, initialState, onToggle)
 
     if desc then
         local sub = Instance.new("TextLabel")
-        sub.Size = UDim2.new(1,-70,0,18)
-        sub.Position = UDim2.new(0,12,0,28)
+        sub.Size = UDim2.new(1, -70, 0, 18)
+        sub.Position = UDim2.new(0, 10, 0, 30)
         sub.BackgroundTransparency = 1
         sub.Text = desc
         sub.TextColor3 = C.sub
@@ -639,158 +630,161 @@ local function makeToggle(parent, label, desc, initialState, onToggle)
         sub.Parent = row
     end
 
-    local state = initialState or false
-    local toggle = Instance.new("TextButton")
-    toggle.Size = UDim2.new(0,48,0,26)
-    toggle.Position = UDim2.new(1,-58,0.5,-13)
-    toggle.BackgroundColor3 = state and C.on or C.off
-    toggle.Text = state and "ON" or "OFF"
-    toggle.TextColor3 = Color3.new(1,1,1)
-    toggle.Font = Enum.Font.GothamBold
-    toggle.TextSize = 11
-    toggle.BorderSizePixel = 0
-    toggle.Parent = row
-    Instance.new("UICorner",toggle).CornerRadius = UDim.new(0,6)
+    local state = false
+    local tog = Instance.new("TextButton")
+    tog.Size = UDim2.new(0, 52, 0, 28)
+    tog.Position = UDim2.new(1, -60, 0.5, -14)
+    tog.BackgroundColor3 = C.off
+    tog.Text = "OFF"
+    tog.TextColor3 = Color3.new(1,1,1)
+    tog.Font = Enum.Font.GothamBold
+    tog.TextSize = 12
+    tog.BorderSizePixel = 0
+    tog.Parent = row
+    Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 6)
 
-    toggle.MouseButton1Click:Connect(function()
+    tog.MouseButton1Click:Connect(function()
         state = not state
-        toggle.BackgroundColor3 = state and C.on or C.off
-        toggle.Text = state and "ON" or "OFF"
+        tog.BackgroundColor3 = state and C.on or C.off
+        tog.Text = state and "ON" or "OFF"
         if onToggle then onToggle(state) end
     end)
-
-    return toggle
+    return tog
 end
 
--- Helper: action button
+-- Button helper
 local function makeButton(parent, label, color, onClick)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,-8,0,38)
+    btn.Size = UDim2.new(1, -4, 0, 40)
     btn.BackgroundColor3 = color or C.accent
     btn.Text = label
-    btn.TextColor3 = Color3.fromRGB(10,10,10)
+    btn.TextColor3 = color == C.item and C.text or Color3.fromRGB(10, 10, 10)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 13
     btn.BorderSizePixel = 0
     btn.Parent = parent
-    Instance.new("UICorner",btn).CornerRadius = UDim.new(0,8)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     btn.MouseButton1Click:Connect(onClick)
     return btn
 end
 
--- =============================================
--- BUILD TABS
--- =============================================
-local farmTab = makeTab("Farm", "[MINE]")
-local forgeTab = makeTab("Forge", "[FORGE]")
-local sellTab = makeTab("Sell", "[SELL]")
-local playerTab = makeTab("Player", "[PLAYER]")
-local tpTab = makeTab("Teleport", "[MAP]")
+-- Label helper
+local function makeLabel(parent, text)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -4, 0, 32)
+    lbl.BackgroundColor3 = C.panel
+    lbl.Text = text
+    lbl.TextColor3 = C.sub
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 12
+    lbl.BorderSizePixel = 0
+    lbl.Parent = parent
+    Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 8)
+    return lbl
+end
 
-local farmPage = makePage("Farm")
-local forgePage = makePage("Forge")
-local sellPage = makePage("Sell")
+-- =============================================
+-- BUILD TABS AND PAGES
+-- =============================================
+local farmTab    = makeTab("Farm",    "Mine")
+local forgeTab   = makeTab("Forge",   "Forge")
+local sellTab    = makeTab("Sell",    "Sell")
+local playerTab  = makeTab("Player",  "Player")
+local tpTab      = makeTab("TP",      "TP")
+
+local farmPage   = makePage("Farm")
+local forgePage  = makePage("Forge")
+local sellPage   = makePage("Sell")
 local playerPage = makePage("Player")
-local tpPage = makePage("Teleport")
+local tpPage     = makePage("TP")
 
--- FARM PAGE
-makeToggle(farmPage, "Auto Mine", "Tweens to nearest ore and mines", false, function(state)
+-- FARM
+makeToggle(farmPage, "Auto Mine", "Tweens to nearest rock and mines", function(state)
     Settings.Mining.Enabled = state
     if state then startMining() else stopMining() end
 end)
-
-local mineStatusLabel = Instance.new("TextLabel")
-mineStatusLabel.Size = UDim2.new(1,-8,0,30)
-mineStatusLabel.BackgroundColor3 = C.panel
-mineStatusLabel.Text = "Status: Idle"
-mineStatusLabel.TextColor3 = C.sub
-mineStatusLabel.Font = Enum.Font.Gotham
-mineStatusLabel.TextSize = 12
-mineStatusLabel.BorderSizePixel = 0
-mineStatusLabel.Parent = farmPage
-Instance.new("UICorner",mineStatusLabel).CornerRadius = UDim.new(0,8)
+local mineStatusLabel = makeLabel(farmPage, "Status: Idle")
 
 RunService.Heartbeat:Connect(function()
+    if not mineStatusLabel or not mineStatusLabel.Parent then return end
     if miningActive and currentRock then
-        mineStatusLabel.Text = "[MINE] Mining: " .. currentRock.Name
+        mineStatusLabel.Text = "Mining: " .. currentRock.Name
     elseif miningActive then
-        mineStatusLabel.Text = "[SEARCH] Searching for rocks..."
+        mineStatusLabel.Text = "Searching for rocks..."
     else
         mineStatusLabel.Text = "Status: Idle"
     end
 end)
 
--- FORGE PAGE
-makeToggle(forgePage, "Auto Forge", "Skips all forging minigames", false, function(state)
+-- FORGE
+makeToggle(forgePage, "Auto Forge", "Skips all forging minigames", function(state)
     Settings.Forge.Enabled = state
     if state then startForge() else stopForge() end
 end)
 
--- SELL PAGE
-makeToggle(sellPage, "Auto Sell", "Sells inventory every 30s", false, function(state)
+-- SELL
+makeToggle(sellPage, "Auto Sell", "Sells every 30 seconds", function(state)
     Settings.Sell.Enabled = state
     if state then startAutoSell() else stopAutoSell() end
 end)
 makeButton(sellPage, "Sell Now", C.on, function() doSell() end)
 
--- PLAYER PAGE
-makeToggle(playerPage, "Noclip", "Walk through walls", false, function(state)
+-- PLAYER
+makeToggle(playerPage, "Noclip", "Walk through walls", function(state)
     Settings.Player.Noclip = state
     if state then startNoclip() else stopNoclip() end
 end)
-makeToggle(playerPage, "Fly", "WASD + Space/Shift to fly", false, function(state)
+makeToggle(playerPage, "Fly", "WASD + Jump/Shift to fly", function(state)
     Settings.Player.Fly = state
     if state then startFly() else stopFly() end
 end)
-makeToggle(playerPage, "Infinite Jump", "Jump anytime", false, function(state)
+makeToggle(playerPage, "Infinite Jump", nil, function(state)
     Settings.Player.InfiniteJump = state
     if state then startInfiniteJump() else stopInfiniteJump() end
 end)
-makeToggle(playerPage, "Auto Run", "Hold run toggle", false, function(state)
+makeToggle(playerPage, "Auto Run", nil, function(state)
     toggleAutoRun(state)
 end)
 
--- TELEPORT PAGE
+-- TELEPORT
 local islands = {
-    {"Island 1 (Starter)", Vector3.new(0, 5, 0)},
+    {"Island 1", Vector3.new(0, 5, 0)},
     {"Island 2", Vector3.new(300, 5, 0)},
     {"Island 3", Vector3.new(600, 5, 0)},
     {"Island 4", Vector3.new(900, 5, 0)},
 }
-
 for _, data in ipairs(islands) do
     makeButton(tpPage, "-> " .. data[1], C.item, function()
         local root = getRoot()
-        if root then
-            root.CFrame = CFrame.new(data[2])
-        end
+        if root then root.CFrame = CFrame.new(data[2]) end
     end)
 end
 
--- Activate first tab manually
+-- Activate Farm tab by default
 farmTab.BackgroundColor3 = C.accent
-farmTab.TextColor3 = Color3.fromRGB(10,10,10)
+farmTab.TextColor3 = Color3.fromRGB(10, 10, 10)
 pages["Farm"].Visible = true
 activeTab = {btn = farmTab, name = "Farm"}
 
--- =============================================
--- DRAG SUPPORT
--- =============================================
-local dragging, dragInput, dragStart, startPos
+-- Drag
+local dragging, dragStart, startPos
 titleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or
+       input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = mainFrame.Position
     end
 end)
 titleBar.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or
+       input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
+       input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
         mainFrame.Position = UDim2.new(
             startPos.X.Scale, startPos.X.Offset + delta.X,
@@ -799,4 +793,4 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
-print("[Forge Script v2.0] Loaded successfully!")
+print("[Forge Script v2.0] Loaded OK")
