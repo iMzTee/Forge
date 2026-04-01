@@ -1311,7 +1311,7 @@ button(miscPage,"Destroy UI & Stop All",COLORS.danger,function()
 end)
 
 -- Activate first tab
-tabPages["Farm"].btn:MouseButton1Click:Fire()
+tabPages["Farm"].btn.MouseButton1Click:Fire()
 
 -- =============================================
 -- [[ BACKGROUND LOOPS ]]
