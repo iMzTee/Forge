@@ -712,8 +712,8 @@ local COLORS = {
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "Main"
-mainFrame.Size = UDim2.new(0,600,0,440)
-mainFrame.Position = UDim2.new(0.5,-300,0.5,-220)
+mainFrame.Size = UDim2.new(0.92,0,0.72,0)
+mainFrame.Position = UDim2.new(0.04,0,0.14,0)
 mainFrame.BackgroundColor3 = COLORS.bg
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
@@ -845,7 +845,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
     sidebar.Visible = not minimized
     contentArea.Visible = not minimized
-    mainFrame.Size = minimized and UDim2.new(0,600,0,38) or UDim2.new(0,600,0,440)
+    mainFrame.Size = minimized and UDim2.new(0.92,0,0,38) or UDim2.new(0.92,0,0.72,0)
 end)
 
 closeBtn.MouseButton1Click:Connect(function()
@@ -999,7 +999,8 @@ local function slider(parent, label, min, max, default, cb)
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = frame
 
-    local track = Instance.new("Frame")
+    local track = Instance.new("TextButton")
+    track.Text = ""
     track.Size = UDim2.new(1,-20,0,6)
     track.Position = UDim2.new(0,10,0,34)
     track.BackgroundColor3 = COLORS.inactive
@@ -1311,7 +1312,13 @@ button(miscPage,"Destroy UI & Stop All",COLORS.danger,function()
 end)
 
 -- Activate first tab
-tabPages["Farm"].btn.MouseButton1Click:Fire()
+do
+    local first = tabPages["Farm"]
+    first.page.Visible = true
+    first.btn.BackgroundColor3 = COLORS.accent
+    first.btn.TextColor3 = Color3.fromRGB(15,15,20)
+    activeTab = {page=first.page, btn=first.btn}
+end
 
 -- =============================================
 -- [[ BACKGROUND LOOPS ]]
