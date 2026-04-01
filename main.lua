@@ -64,25 +64,48 @@ local function getRemote(name, folder)
     return search(folder)
 end
 
--- Cache remotes on startup
+-- Hardcoded remote paths from debug output
 local Remotes = {}
 task.spawn(function()
-    task.wait(2)
-    Remotes.ToolActivated  = getRemote("ToolActivated")
-    Remotes.StartBlock     = getRemote("StartBlock")
-    Remotes.StopBlock      = getRemote("StopBlock")
-    Remotes.ClaimOre       = getRemote("ClaimOre")
-    Remotes.StartForge     = getRemote("StartForge")
-    Remotes.EndForge       = getRemote("EndForge")
-    Remotes.ChangeSequence = getRemote("ChangeSequence")
-    Remotes.Forge          = getRemote("Forge")
-    Remotes.Sell           = getRemote("Sell")
-    Remotes.SellAnywhere   = getRemote("SellAnywhere")
-    Remotes.SellMisc       = getRemote("SellMisc")
-    Remotes.Run            = getRemote("Run")
-    Remotes.StopRun        = getRemote("StopRun")
-    Remotes.Dash           = getRemote("Dash")
-    Remotes.TeleportToIsland = getRemote("TeleportToIsland")
+    task.wait(3)
+    local Shared = RS:WaitForChild("Shared", 10)
+    local Packages = Shared and Shared:WaitForChild("Packages", 10)
+    local Knit = Packages and Packages:WaitForChild("Knit", 10)
+    local Services = Knit and Knit:WaitForChild("Services", 10)
+
+    local function getRF(serviceName, remoteName)
+        if not Services then return nil end
+        local svc = Services:FindFirstChild(serviceName)
+        local rf = svc and svc:FindFirstChild("RF")
+        return rf and rf:FindFirstChild(remoteName)
+    end
+
+    Remotes.ToolActivated  = getRF("ToolService",     "ToolActivated")
+    Remotes.StartBlock     = getRF("ToolService",     "StartBlock")
+    Remotes.StopBlock      = getRF("ToolService",     "StopBlock")
+    Remotes.ClaimOre       = getRF("CodexService",    "ClaimOre")
+    Remotes.StartForge     = getRF("ForgeService",    "StartForge")
+    Remotes.EndForge       = getRF("ForgeService",    "EndForge")
+    Remotes.ChangeSequence = getRF("ForgeService",    "ChangeSequence")
+    Remotes.Forge          = getRF("ProximityService","Forge")
+    Remotes.Sell           = getRF("InventoryService","Sell")
+    Remotes.SellAnywhere   = getRF("InventoryService","SellAnywhere")
+    Remotes.SellMisc       = getRF("InventoryService","SellMisc")
+    Remotes.Run            = getRF("CharacterService","Run")
+    Remotes.StopRun        = getRF("CharacterService","StopRun")
+    Remotes.Dash           = getRF("CharacterService","Dash")
+    Remotes.TeleportToIsland = getRF("CharacterService","TeleportToIsland")
+
+    -- Log what loaded
+    local found, missing = 0, {}
+    for k, v in pairs(Remotes) do
+        if v then found = found + 1
+        else table.insert(missing, k) end
+    end
+    print("[Forge] Remotes loaded: " .. found)
+    if #missing > 0 then
+        print("[Forge] Missing: " .. table.concat(missing, ", "))
+    end
 end)
 
 -- =============================================
@@ -90,15 +113,22 @@ end)
 -- =============================================
 local function fireRemote(name, ...)
     local remote = Remotes[name]
-    if not remote then return end
+    if not remote then
+        print("[Forge] MISSING remote: " .. name)
+        return nil
+    end
     local args = {...}
-    pcall(function()
+    local ok, result = pcall(function()
         if remote:IsA("RemoteEvent") then
-            remote:FireServer(table.unpack(args))
+            return remote:FireServer(table.unpack(args))
         elseif remote:IsA("RemoteFunction") then
-            remote:InvokeServer(table.unpack(args))
+            return remote:InvokeServer(table.unpack(args))
         end
     end)
+    if not ok then
+        print("[Forge] Remote error [" .. name .. "]: " .. tostring(result))
+    end
+    return result
 end
 
 local function getRoot()
@@ -167,19 +197,53 @@ local function getRocks()
     local root = getRoot()
     if not root then return rocks end
 
-    -- Search workspace for rock/ore objects
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and isRock(obj) then
-            local d = distance(root, obj)
-            if d <= Settings.Mining.MineRadius then
-                -- Filter by whitelist if set
-                if #Settings.Mining.OreWhitelist == 0 then
-                    table.insert(rocks, obj)
-                else
-                    for _, allowed in ipairs(Settings.Mining.OreWhitelist) do
-                        if obj.Name:lower():find(allowed:lower()) then
-                            table.insert(rocks, obj)
-                            break
+    -- Search common rock container locations
+    local searchTargets = {
+        workspace:FindFirstChild("Rocks"),
+        workspace:FindFirstChild("Map"),
+        workspace:FindFirstChild("World"),
+        workspace,
+    }
+
+    local seen = {}
+    for _, container in ipairs(searchTargets) do
+        if container then
+            for _, obj in ipairs(container:GetDescendants()) do
+                if not seen[obj] and obj:IsA("BasePart") and obj.Parent then
+                    local name = obj.Name:lower()
+                    -- Match rock/ore part names used by The Forge
+                    local isValidRock = (
+                        name == "hitbox" or
+                        name == "rock" or
+                        name:find("rock") or
+                        name:find("ore") or
+                        name:find("stone") or
+                        name:find("pebble") or
+                        name:find("boulder") or
+                        name:find("crystal") or
+                        -- parent model might be the ore type
+                        (obj.Parent and obj.Parent:IsA("Model") and (
+                            obj.Parent.Name:lower():find("rock") or
+                            obj.Parent.Name:lower():find("ore") or
+                            obj.Parent.Name:lower():find("stone")
+                        ))
+                    )
+                    if isValidRock then
+                        local d = distance(root, obj)
+                        if d <= Settings.Mining.MineRadius then
+                            seen[obj] = true
+                            if #Settings.Mining.OreWhitelist == 0 then
+                                table.insert(rocks, obj)
+                            else
+                                local parentName = obj.Parent and obj.Parent.Name or ""
+                                for _, allowed in ipairs(Settings.Mining.OreWhitelist) do
+                                    if obj.Name:lower():find(allowed:lower()) or
+                                       parentName:lower():find(allowed:lower()) then
+                                        table.insert(rocks, obj)
+                                        break
+                                    end
+                                end
+                            end
                         end
                     end
                 end
@@ -187,7 +251,6 @@ local function getRocks()
         end
     end
 
-    -- Sort by distance
     table.sort(rocks, function(a, b)
         local ra = getRoot()
         if not ra then return false end
