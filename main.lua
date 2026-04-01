@@ -386,7 +386,8 @@ end
 local function stopFly()
     if flyConn then flyConn:Disconnect(); flyConn = nil end
     if flyBody then
-        flyBody.Parent:FindFirstChildOfClass("BodyGyro"):Destroy()
+        local bg = flyBody.Parent and flyBody.Parent:FindFirstChildOfClass("BodyGyro")
+        if bg then bg:Destroy() end
         flyBody:Destroy()
         flyBody = nil
     end
@@ -765,8 +766,11 @@ for _, data in ipairs(islands) do
     end)
 end
 
--- Activate first tab
-farmTab:FireMouseButton1Click()
+-- Activate first tab manually
+farmTab.BackgroundColor3 = C.accent
+farmTab.TextColor3 = Color3.fromRGB(10,10,10)
+pages["Farm"].Visible = true
+activeTab = {btn = farmTab, name = "Farm"}
 
 -- =============================================
 -- DRAG SUPPORT
