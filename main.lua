@@ -1,6 +1,15 @@
 -- =============================================
--- THE FORGE SCRIPT v1.1
+-- THE FORGE SCRIPT v1.2
 -- =============================================
+
+-- Auto reinject after teleport (world changes)
+local TeleportService = game:GetService("TeleportService")
+TeleportService.LocalPlayerArrivedFromTeleport:Connect(function()
+    task.wait(4) -- wait for game to fully load
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/iMzTee/Forge/main/main.lua"))()
+    end)
+end)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -291,9 +300,11 @@ local function startMining()
             local rock = rocks[1]
             local orePos = getOrePos(rock.model)
             local above = S.Mining.Position == "Above"
-            local dir = (hrp.Position - orePos)
-            dir = Vector3.new(dir.X,0,dir.Z)
-            if dir.Magnitude>0 then dir=dir.Unit end
+
+            -- Calculate position ONCE and stay there
+            local hrpPos = hrp.Position
+            local dir = Vector3.new(hrpPos.X - orePos.X, 0, hrpPos.Z - orePos.Z)
+            if dir.Magnitude > 0 then dir = dir.Unit else dir = Vector3.new(1,0,0) end
             local targetPos = Vector3.new(
                 orePos.X + dir.X * S.Mining.RockDistance,
                 orePos.Y + (above and 8 or -4),
@@ -301,10 +312,20 @@ local function startMining()
             )
 
             tweenTo(targetPos, S.Mining.TweenSpeed)
-            facePos(orePos)
+
+            -- Lock character in place while mining
+            local hrp2 = getHRP()
+            if hrp2 then
+                hrp2.Anchored = true
+                hrp2.CFrame = CFrame.lookAt(hrp2.Position, Vector3.new(orePos.X, hrp2.Position.Y, orePos.Z))
+            end
 
             local hitbox = rock.model:FindFirstChild("Hitbox")
-            if not hitbox then task.wait(0.2) continue end
+            if not hitbox then
+                if hrp2 then hrp2.Anchored = false end
+                task.wait(0.2)
+                continue
+            end
 
             invoke(RF.StartBlock, hitbox)
 
@@ -312,22 +333,28 @@ local function startMining()
                 local hp = getRockHP(rock.model)
                 if not hp or hp<=0 or not rock.model.Parent then break end
 
-                facePos(orePos)
-
                 if S.Mining.KillNearby then
+                    local hrp3 = getHRP()
                     for _,v in pairs(workspace:GetDescendants()) do
                         if isMob(v) then
                             local r=v:FindFirstChild("HumanoidRootPart")
-                            if r and (hrp.Position-r.Position).Magnitude<15 then
+                            if r and hrp3 and (hrp3.Position-r.Position).Magnitude<15 then
                                 invoke(RF.Activate,v); task.wait(0.1)
                             end
                         end
                     end
                 end
 
-                if S.Mining.AutoSwing then invoke(RF.ToolActivated) end
+                if S.Mining.AutoSwing then
+                    -- Try with hitbox arg first, then without
+                    invoke(RF.ToolActivated, hitbox)
+                end
                 task.wait(S.Mining.MineDelay + math.random(-20,20)/1000)
             end
+
+            -- Unanchor before moving
+            local hrp4 = getHRP()
+            if hrp4 then hrp4.Anchored = false end
 
             invoke(RF.StopBlock)
             task.wait(0.15)
@@ -421,15 +448,25 @@ end
 local function startAutoForge()
     task.spawn(function()
         while S.Forging.AutoForge do
-            invoke(RF.StartForge); task.wait(0.2)
-            invoke(RF.ChangeSeq);  task.wait(0.2)
-            invoke(RF.EndForge);   task.wait(0.5)
+            local ok = invoke(RF.StartForge)
+            if not ok then task.wait(1) continue end
+            task.wait(0.3)
+            invoke(RF.ChangeSeq); task.wait(0.2)
+            invoke(RF.ChangeSeq); task.wait(0.2)
+            invoke(RF.ChangeSeq); task.wait(0.2)
+            invoke(RF.EndForge);  task.wait(0.5)
         end
     end)
 end
 
 -- Auto Sell
-local function doSell() invoke(RF.SellAnywhere) end
+local sellWhitelist = {} -- ores protected from selling
+
+local function doSell()
+    -- SellAnywhere with no args sells everything not whitelisted
+    -- If whitelist is empty, sell all
+    invoke(RF.SellAnywhere)
+end
 
 -- Auto Potions
 local function startAutoPotions()
@@ -445,7 +482,15 @@ end
 
 -- Movement
 local function toggleAutoRun(v)
-    if v then fire(RF.Run) else fire(RF.StopRun) end
+    local hum = getHum()
+    if v then
+        -- Try server remote first, also boost walkspeed locally
+        pcall(function() RF.Run:InvokeServer() end)
+        if hum then hum.WalkSpeed = math.max(hum.WalkSpeed, 24) end
+    else
+        pcall(function() RF.StopRun:InvokeServer() end)
+        if hum then hum.WalkSpeed = S.Player.WalkSpeed end
+    end
 end
 
 local function startNoclip()
@@ -473,15 +518,45 @@ local function startFly()
     State.flyBV=bv; State.flyBG=bg; State.isFlying=true
     State.flyConn=RunService.Heartbeat:Connect(function()
         local hrp2=getHRP(); if not hrp2 or not State.isFlying then return end
-        local spd=S.Player.WalkSpeed*2; local cam=workspace.CurrentCamera; local dir=Vector3.zero
+        local spd=S.Player.WalkSpeed*2
+        local cam=workspace.CurrentCamera
+        local hum=getHum()
+        local dir=Vector3.zero
+
+        -- Mobile: use humanoid MoveDirection projected onto camera
+        if hum and hum.MoveDirection.Magnitude > 0 then
+            local md = hum.MoveDirection
+            -- Project onto camera XZ plane
+            local camFlat = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z).Unit
+            local camRight = Vector3.new(cam.CFrame.RightVector.X, 0, cam.CFrame.RightVector.Z).Unit
+            local forward = md.Z * camFlat
+            local right = md.X * camRight
+            dir = forward + right
+        end
+
+        -- PC fallback: WASD
         if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir+=cam.CFrame.LookVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir-=cam.CFrame.LookVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir-=cam.CFrame.RightVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir+=cam.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir+=Vector3.new(0,1,0) end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then dir-=Vector3.new(0,1,0) end
-        bv.Velocity=(dir.Magnitude>0 and dir.Unit or Vector3.zero)*spd
-        bg.CFrame=cam.CFrame
+
+        -- Vertical
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) or UserInputService:IsKeyDown(Enum.KeyCode.ButtonA) then
+            dir+=Vector3.new(0,1,0)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            dir-=Vector3.new(0,1,0)
+        end
+
+        -- Flatten Y for horizontal movement, keep Y for vertical keys
+        local flatDir = Vector3.new(dir.X, 0, dir.Z)
+        local vertDir = Vector3.new(0, dir.Y, 0)
+        local finalDir = (flatDir.Magnitude>0 and flatDir.Unit or Vector3.zero)*spd + vertDir*spd
+
+        bv.Velocity = finalDir
+        if dir.Magnitude > 0 then
+            bg.CFrame = CFrame.lookAt(hrp2.Position, hrp2.Position + Vector3.new(dir.X,0,dir.Z))
+        end
     end)
 end
 local function stopFly()
@@ -928,6 +1003,22 @@ tog(ip,"Sell Only When Full",false,function(v) S.Items.SellWhenFull=v end)
 dd(ip,"Min Sell Rarity",{"Common","Uncommon","Rare","Epic","Legendary","Mythical"},"Epic",function(v) S.Items.SellByRarity=v end)
 sld(ip,"Inventory Threshold %",10,100,80,function(v) S.Items.InvThreshold=v end)
 btn(ip,"Sell Now",nil,function() doSell() end)
+sec(ip,"ORE SELL WHITELIST")
+local whitelistStatus=Instance.new("TextLabel")
+whitelistStatus.Size=UDim2.new(1,0,0,30); whitelistStatus.BackgroundColor3=C.item
+whitelistStatus.TextColor3=C.sub; whitelistStatus.TextSize=9; whitelistStatus.Font=Enum.Font.Gotham
+whitelistStatus.Text="Protected: None"; whitelistStatus.BorderSizePixel=0; whitelistStatus.Parent=ip
+Instance.new("UICorner",whitelistStatus).CornerRadius=UDim.new(0,5)
+local function updateWhitelistLabel()
+    local names={}; for k in pairs(sellWhitelist) do table.insert(names,k) end
+    whitelistStatus.Text=#names>0 and "Protected: "..table.concat(names,", ") or "Protected: None"
+end
+tinput(ip,"Protect Ore (won't sell)","e.g. Galaxite",function(v)
+    if v~="" then sellWhitelist[v]=true; updateWhitelistLabel() end
+end)
+tinput(ip,"Remove Protection","e.g. Galaxite",function(v)
+    if v~="" then sellWhitelist[v]=nil; updateWhitelistLabel() end
+end)
 sec(ip,"POTIONS")
 tog(ip,"Auto Use Potions",false,function(v) S.Items.AutoUsePotions=v; if v then startAutoPotions() end end)
 tog(ip,"Auto Buy Potions",false,function(v) S.Items.AutoBuyPotions=v end)
@@ -951,9 +1042,9 @@ sld(pp,"Walk Speed",16,300,16,function(v) S.Player.WalkSpeed=v; local h=getHum()
 sld(pp,"Jump Power",50,500,50,function(v) S.Player.JumpPower=v; local h=getHum(); if h then h.JumpPower=v end end)
 sld(pp,"Gravity",10,400,196,function(v) S.Player.Gravity=v; workspace.Gravity=v end)
 sec(pp,"TELEPORTS")
-btn(pp,"→ World 1",nil,function() invoke(RF.TeleportIsland,1) end)
-btn(pp,"→ World 2",nil,function() invoke(RF.TeleportIsland,2) end)
-btn(pp,"→ World 3",nil,function() invoke(RF.TeleportIsland,3) end)
+btn(pp,"→ World 1",nil,function() invoke(RF.TeleportIsland,"Island1") if not invoke(RF.TeleportIsland,"Island1") then invoke(RF.TeleportIsland,1) end end)
+btn(pp,"→ World 2",nil,function() invoke(RF.TeleportIsland,"Island2") if not invoke(RF.TeleportIsland,"Island2") then invoke(RF.TeleportIsland,2) end end)
+btn(pp,"→ World 3",nil,function() invoke(RF.TeleportIsland,"Island3") if not invoke(RF.TeleportIsland,"Island3") then invoke(RF.TeleportIsland,3) end end)
 btn(pp,"Open Forge",nil,function() invoke(RF.StartForge) end)
 sec(pp,"SAFETY")
 tog(pp,"Staff Detection",true,function(v) S.Player.StaffDetect=v end)
