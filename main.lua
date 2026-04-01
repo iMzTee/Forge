@@ -794,3 +794,39 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 print("[Forge Script v2.0] Loaded OK")
+
+-- =============================================
+-- [[ REMOTE DEBUGGER ]]
+-- Run this in executor to find actual remote paths
+-- =============================================
+task.spawn(function()
+    task.wait(5)
+    local found = {}
+    local targets = {
+        "ToolActivated","StartBlock","StopBlock","ClaimOre",
+        "StartForge","EndForge","Forge","ChangeSequence",
+        "Sell","SellAnywhere","SellMisc","Run","StopRun"
+    }
+    local function scan(obj, path)
+        for _, child in ipairs(obj:GetChildren()) do
+            local childPath = path .. "." .. child.Name
+            for _, t in ipairs(targets) do
+                if child.Name == t then
+                    found[t] = childPath .. " [" .. child.ClassName .. "]"
+                end
+            end
+            pcall(scan, child, childPath)
+        end
+    end
+    scan(game:GetService("ReplicatedStorage"), "RS")
+    print("=== REMOTE LOCATIONS ===")
+    for k, v in pairs(found) do
+        print(k .. " -> " .. v)
+    end
+    print("========================")
+    -- Also dump Remotes cache state
+    print("=== CACHED REMOTES ===")
+    for k, v in pairs(Remotes) do
+        print(k .. " = " .. tostring(v))
+    end
+end)
