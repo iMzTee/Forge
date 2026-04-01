@@ -484,7 +484,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1,-20,1,0)
 titleLabel.Position = UDim2.new(0,14,0,0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "⚒ THE FORGE SCRIPT v2.0"
+titleLabel.Text = "[FORGE] THE FORGE SCRIPT v2.0"
 titleLabel.TextColor3 = C.accent
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextSize = 14
@@ -497,7 +497,7 @@ local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0,28,0,22)
 closeBtn.Position = UDim2.new(1,-32,0,7)
 closeBtn.BackgroundColor3 = C.danger
-closeBtn.Text = "✕"
+closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.new(1,1,1)
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.TextSize = 12
@@ -510,7 +510,7 @@ local minBtn = Instance.new("TextButton")
 minBtn.Size = UDim2.new(0,28,0,22)
 minBtn.Position = UDim2.new(1,-64,0,7)
 minBtn.BackgroundColor3 = C.off
-minBtn.Text = "—"
+minBtn.Text = "-"
 minBtn.TextColor3 = Color3.new(1,1,1)
 minBtn.Font = Enum.Font.GothamBold
 minBtn.TextSize = 12
@@ -681,11 +681,11 @@ end
 -- =============================================
 -- BUILD TABS
 -- =============================================
-local farmTab = makeTab("Farm", "⛏")
-local forgeTab = makeTab("Forge", "🔨")
-local sellTab = makeTab("Sell", "💰")
-local playerTab = makeTab("Player", "🧍")
-local tpTab = makeTab("Teleport", "🗺")
+local farmTab = makeTab("Farm", "[MINE]")
+local forgeTab = makeTab("Forge", "[FORGE]")
+local sellTab = makeTab("Sell", "[SELL]")
+local playerTab = makeTab("Player", "[PLAYER]")
+local tpTab = makeTab("Teleport", "[MAP]")
 
 local farmPage = makePage("Farm")
 local forgePage = makePage("Forge")
@@ -712,9 +712,9 @@ Instance.new("UICorner",mineStatusLabel).CornerRadius = UDim.new(0,8)
 
 RunService.Heartbeat:Connect(function()
     if miningActive and currentRock then
-        mineStatusLabel.Text = "⛏ Mining: " .. currentRock.Name
+        mineStatusLabel.Text = "[MINE] Mining: " .. currentRock.Name
     elseif miningActive then
-        mineStatusLabel.Text = "🔍 Searching for rocks..."
+        mineStatusLabel.Text = "[SEARCH] Searching for rocks..."
     else
         mineStatusLabel.Text = "Status: Idle"
     end
@@ -759,7 +759,7 @@ local islands = {
 }
 
 for _, data in ipairs(islands) do
-    makeButton(tpPage, "→ " .. data[1], C.item, function()
+    makeButton(tpPage, "-> " .. data[1], C.item, function()
         local root = getRoot()
         if root then
             root.CFrame = CFrame.new(data[2])
