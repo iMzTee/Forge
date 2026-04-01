@@ -238,9 +238,19 @@ end
 local function getSortedRocks()
     local hrp = getHRP(); if not hrp then return {} end
     local list={}
-    for _,v in pairs(workspace:GetDescendants()) do
+
+    -- Use workspace.Rocks folder structure if available
+    local rocksFolder = workspace:FindFirstChild("Rocks")
+    local searchIn = rocksFolder and rocksFolder:GetDescendants() or workspace:GetDescendants()
+
+    for _,v in pairs(searchIn) do
         if isRock(v) then
             local name = getRockName(v)
+            -- Zone filter using folder name
+            if S.Mining.ZoneFilter ~= "All" then
+                local parent = v.Parent
+                if parent and not parent.Name:find(S.Mining.ZoneFilter) then continue end
+            end
             if S.Mining.SkipUndesiredRocks and not rockCanDrop(name) then continue end
             if next(S.Mining.SelectedRocks) and not S.Mining.SelectedRocks[name] then continue end
             local h = v:FindFirstChild("Hitbox")
@@ -952,7 +962,7 @@ tog(fp,"Skip Undesired Rocks",false,function(v) S.Mining.SkipUndesiredRocks=v en
 tog(fp,"Avoid Enemies",false,function(v) S.Mining.AvoidEnemies=v end)
 tog(fp,"Kill Nearby Enemies",false,function(v) S.Mining.KillNearby=v end)
 dd(fp,"Mine Position",{"Above","Below","Off"},"Above",function(v) S.Mining.Position=v end)
-dd(fp,"Lava Mode (W2)",{"Skip","Above","Off"},"Skip",function(v) S.Mining.LavaMode=v end)
+dd(fp,"Zone Filter",{"All","CaveStart","CaveMid","CaveDeep"},"All",function(v) S.Mining.ZoneFilter=v end)
 sld(fp,"Rock Distance",2,25,5,function(v) S.Mining.RockDistance=v end)
 sld(fp,"Tween Speed",10,150,50,function(v) S.Mining.TweenSpeed=v end)
 sld(fp,"Mine Delay (ms)",50,2000,100,function(v) S.Mining.MineDelay=v/1000 end)
@@ -1042,9 +1052,9 @@ sld(pp,"Walk Speed",16,300,16,function(v) S.Player.WalkSpeed=v; local h=getHum()
 sld(pp,"Jump Power",50,500,50,function(v) S.Player.JumpPower=v; local h=getHum(); if h then h.JumpPower=v end end)
 sld(pp,"Gravity",10,400,196,function(v) S.Player.Gravity=v; workspace.Gravity=v end)
 sec(pp,"TELEPORTS")
-btn(pp,"→ World 1",nil,function() invoke(RF.TeleportIsland,"Island1") if not invoke(RF.TeleportIsland,"Island1") then invoke(RF.TeleportIsland,1) end end)
-btn(pp,"→ World 2",nil,function() invoke(RF.TeleportIsland,"Island2") if not invoke(RF.TeleportIsland,"Island2") then invoke(RF.TeleportIsland,2) end end)
-btn(pp,"→ World 3",nil,function() invoke(RF.TeleportIsland,"Island3") if not invoke(RF.TeleportIsland,"Island3") then invoke(RF.TeleportIsland,3) end end)
+btn(pp,"→ World 1",nil,function() invoke(RF.TeleportIsland,"Island1") end)
+btn(pp,"→ World 2",nil,function() invoke(RF.TeleportIsland,"Island2") end)
+btn(pp,"→ World 3",nil,function() invoke(RF.TeleportIsland,"Island3") end)
 btn(pp,"Open Forge",nil,function() invoke(RF.StartForge) end)
 sec(pp,"SAFETY")
 tog(pp,"Staff Detection",true,function(v) S.Player.StaffDetect=v end)
